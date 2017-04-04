@@ -31,23 +31,8 @@ input_attr = file.readline().strip().split(',')
 
 for line in file:
 	test_data.append(map(lambda x: x.strip(),list( line.strip().split(','))))
-# with open('train.csv') as f:
-# 	file = csv.reader(f,delimiter=',')
-# 		# ,quotechar ='|')
-# 	for line in file:
-# 		train_data.append(line)
 
-# with open('kaggle_test_data.csv') as f:
-# 	file = csv.reader(f,delimiter=',')
-# 		# ,quotechar ='|')
-# 	for line in file:
-# 		test_data.append(line)
-# del train_data[0]
-# del test_data[0]
-# train_data = np.array(train_data)[1:,1:]
-# test_data = np.array(train_data)[1:,1:]
-
-# Data Dictionary 
+############################################# Data Dictionary 
 
 data_dict ={1:{'Private':0, 'Self-emp-not-inc':1, 'Self-emp-inc':2, 'Federal-gov':3,
  'Local-gov':4, 'State-gov':5, 'Without-pay':6, 'Never-worked':7},
@@ -73,7 +58,7 @@ data_dict ={1:{'Private':0, 'Self-emp-not-inc':1, 'Self-emp-inc':2, 'Federal-gov
 # Non-numeric indices
 non_numeric =[1,3,5,6,7,8,9,13]
 data_length = 15
-# Preprocessing
+############################################## Preprocessing and Normalizing
 X =[]
 X_test =[]
 for row in train_data:
@@ -131,25 +116,6 @@ for i in range(Nf):
 	temp = (X_test[:,i] - train_min[i])/train_std[i]
 	X_test[:,i] = temp
 
-# End of preprocessing
-
-model = Sequential()
-model.add(Dense(50, input_dim=Nf, kernel_initializer='normal', activation='relu'))
-# model.add(Dense(500, kernel_initializer='normal', activation='relu'))
-# model.add(Dense(32, init='normal', activation='relu'))
-model.add(Dense(1, kernel_initializer='normal',activation='sigmoid'))
-model.compile(loss='binary_crossentropy', optimizer='adam',metrics=['accuracy'])
-model.fit(X, Y, nb_epoch=nb_epoch, batch_size=batch_size, verbose=1)
-
-Y_test = model.predict(X_test, batch_size=batch_size)
-print Y_test[25:35]
-output = [['id','salary']]
-output = output + [[str(test_ids[i]),str(int(j>0.5))] for i,j in enumerate(Y_test.flatten())]
-
-with open('output_keras.csv', 'w') as file:
-	for line in output:
-		file.write(",".join(line) + "\n")
+################################################### End of preprocessing
 
 
-error = model.evaluate(X, Y, batch_size=batch_size, verbose=1)
-print "\n", error
