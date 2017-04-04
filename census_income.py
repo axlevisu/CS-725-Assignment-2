@@ -83,11 +83,11 @@ for row in train_data:
 		if i not in non_numeric:
 			data.append(float(row[i]))
 		else:
-			value =len(data_dict[i])
+			value =[0]*len(data_dict[i])
 			# if row[i] in data_dict[i]:
 			if row[i] != '?':
-				value = data_dict[i][row[i]]
-			data.append(value)
+				value[data_dict[i][row[i]]] = 1
+			data =  data + value
 	X.append(data) 
 
 
@@ -118,11 +118,11 @@ for row in test_data:
 		if i not in non_numeric:
 			data.append(float(row[i]))
 		else:
-			value =len(data_dict[i])
+			value =[0]*len(data_dict[i])
 			# if row[i] in data_dict[i]:
 			if row[i] != '?':
-				value = data_dict[i][row[i]] 
-			data.append(value)
+				value[data_dict[i][row[i]]] = 1
+			data =  data + value
 	X_test.append(data) 
 
 
@@ -131,7 +131,7 @@ for i in range(Nf):
 	temp = (X_test[:,i] - train_min[i])/train_std[i]
 	X_test[:,i] = temp
 
-
+# End of preprocessing
 
 model = Sequential()
 model.add(Dense(50, input_dim=Nf, kernel_initializer='normal', activation='relu'))
