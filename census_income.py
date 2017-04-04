@@ -83,11 +83,11 @@ for row in train_data:
 		if i not in non_numeric:
 			data.append(float(row[i]))
 		else:
-			value =[0]*len(data_dict[i])
+			value =len(data_dict[i])
 			# if row[i] in data_dict[i]:
 			if row[i] != '?':
-				value[data_dict[i][row[i]]] = 1
-			data = data+value
+				value = data_dict[i][row[i]]
+			data.append(value)
 	X.append(data) 
 
 
@@ -95,7 +95,18 @@ X = np.array(X)
 Y = X[:,-1]
 X = X[:,:-1]
 # Y = np_utils.to_categorical(Y)
-print Y[25:35]
+Nf = X.shape[1]
+train_min =[]
+train_std =[]
+for i in range(Nf):
+	f_min = np.min(X[:,i])
+	f_std = np.std(X[:,i])
+	train_min.append(f_min)
+	train_std.append(f_std)
+	temp = (X[:,i] - f_min)/f_std
+	X[:,i] = temp
+
+
 test_ids =[]
 # Same for test data
 data_length = 14
@@ -107,19 +118,25 @@ for row in test_data:
 		if i not in non_numeric:
 			data.append(float(row[i]))
 		else:
-			value =[0]*len(data_dict[i])
+			value =len(data_dict[i])
 			# if row[i] in data_dict[i]:
 			if row[i] != '?':
-				value[data_dict[i][row[i]]] = 1
-			data = data+value
+				value = data_dict[i][row[i]] 
+			data.append(value)
 	X_test.append(data) 
 
 
 X_test = np.array(X_test)
+for i in range(Nf):
+	temp = (X_test[:,i] - train_min[i])/train_std[i]
+	X_test[:,i] = temp
+
+
+
 model = Sequential()
-model.add(Dense(200, input_dim=105, kernel_initializer='normal', activation='relu'))
+model.add(Dense(50, input_dim=Nf, kernel_initializer='normal', activation='relu'))
 # model.add(Dense(500, kernel_initializer='normal', activation='relu'))
-model.add(Dense(32, init='normal', activation='relu'))
+# model.add(Dense(32, init='normal', activation='relu'))
 model.add(Dense(1, kernel_initializer='normal',activation='sigmoid'))
 model.compile(loss='binary_crossentropy', optimizer='adam',metrics=['accuracy'])
 model.fit(X, Y, nb_epoch=nb_epoch, batch_size=batch_size, verbose=1)
@@ -135,4 +152,4 @@ with open('output_keras.csv', 'w') as file:
 
 
 error = model.evaluate(X, Y, batch_size=batch_size, verbose=1)
-print error
+print "\n", error
