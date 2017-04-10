@@ -2,17 +2,45 @@
 import numpy as np
 import pandas
 import csv
-import math
+from math import exp,log
 from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.utils import np_utils
 # import ANN
 
+
+# Helping methods
+def sigmoid(w):
+	return 1/(1 + np.exp(-1.0*w))
+
+def cross_entropy(x,y):
+	x = x*1.0
+	y = y*1.0
+	# if y<1 and y>0:
+	return x*log(y) + (1-x)*log(1-y)
+
+# Single Neuron with bias
+class Neuron():
+	"""docstring for Neuron"""
+	def __init__(self, layer, input_dimension):
+		self.layer = layer
+		self.input_dimension = input_dimension
+		self.w  = np.random.normal(0,1,input_dimension)
+		self.b = np.random.uniform(0,1) 
+
+	def predict(x):
+		value = x.dot(self.w) + self.b
+		# ReLU
+		return value*(value>0)
+	
+
+
+
 # Parameters
 nb_epoch = 10
 al = 0.01
 batch_size = 500
-n_hidden = 100
+n_hidden = 80
 train_data =[]
 test_data =[]
 
@@ -116,6 +144,23 @@ for i in range(Nf):
 	temp = (X_test[:,i] - train_min[i])/train_std[i]
 	X_test[:,i] = temp
 
+
+N = X.shape[0]
+N_test = X_test.shape[0]
+# X = np.c_[[1]*N, X]
+# X_test = np.c_[[1]*N_test, X_test]
 ################################################### End of preprocessing
 
+################################################### One Layer NN
+W_h = np.random.normal(0,1,(X.shape[1] + 1,n_hidden))
+W_f = np.random.normal(0,1,(n_hidden + 1,1))
 
+n_iter = N/batch_size
+
+for g in xrange(n_iter):
+	A = X[g*batch_size:(g+1)*batch_size,:]
+	A = np.c_[[1]*A.shape[0], A]
+	A_h = A.dot(W_h)
+	A_h = np.c_[[1]*A.shape[0], A_h]
+	O = A_h.dot(W_f)
+	del
