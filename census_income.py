@@ -3,44 +3,14 @@ import numpy as np
 import pandas
 import csv
 from math import exp,log
-from keras.models import Sequential
-from keras.layers.core import Dense
-from keras.utils import np_utils
 # import ANN
 
 
-# Helping methods
-def sigmoid(w):
-	return 1/(1 + np.exp(-1.0*w))
-
-def cross_entropy(x,y):
-	x = x*1.0
-	y = y*1.0
-	# if y<1 and y>0:
-	return x*log(y) + (1-x)*log(1-y)
-
-# Single Neuron with bias
-class Neuron():
-	"""docstring for Neuron"""
-	def __init__(self, layer, input_dimension):
-		self.layer = layer
-		self.input_dimension = input_dimension
-		self.w  = np.random.normal(0,1,input_dimension)
-		self.b = np.random.uniform(0,1) 
-
-	def predict(x):
-		value = x.dot(self.w) + self.b
-		# ReLU
-		return value*(value>0)
-	
-
-
-
 # Parameters
-nb_epoch = 10
-al = 0.01
-batch_size = 500
-n_hidden = 80
+nb_epoch = 100
+al = 0.0001
+batch_size = 100
+n_hidden = 160
 train_data =[]
 test_data =[]
 
@@ -107,6 +77,7 @@ for row in train_data:
 X = np.array(X)
 Y = X[:,-1]
 X = X[:,:-1]
+Y = Y.reshape(Y.shape[0],1)
 # Y = np_utils.to_categorical(Y)
 Nf = X.shape[1]
 train_min =[]
@@ -147,20 +118,40 @@ for i in range(Nf):
 
 N = X.shape[0]
 N_test = X_test.shape[0]
-# X = np.c_[[1]*N, X]
-# X_test = np.c_[[1]*N_test, X_test]
 ################################################### End of preprocessing
 
 ################################################### One Layer NN
-W_h = np.random.normal(0,1,(X.shape[1] + 1,n_hidden))
-W_f = np.random.normal(0,1,(n_hidden + 1,1))
+W_h = np.random.normal(0,0.5,(X.shape[1] + 1,n_hidden)) #106x80 W_h
+W_f = np.random.normal(0,0.5,(n_hidden + 1,1))		  #81x1 W_f
 
 n_iter = N/batch_size
+for e in xrange(nb_epoch):
+	for g in xrange(n_iter):
+		A = X[g*batch_size:(g+1)*batch_size,:] #Bx105
+		y = Y[g*batch_size:(g+1)*batch_size,:] #Bx1
+		n_batch = A.shape[0]				   
+		# Input to hidden layer
+		A = np.c_[[1]*n_batch, A]			   #Bx106 A
+		A_h = A.dot(W_h)					   #Bx80 
+		# Input to final layer or output from hidden layer
+		A_h = np.c_[[1]*n_batch, A_h]
+		A_h = A_h*(A_h>0)     	               #Bx81 A_h
+		O = A_h.dot(W_f)					   #Bx1 
+		O = 1.0/(1.0 + np.exp(-1.0*O))		   #Bx1 A_f or O
+		# d_f = y*(1 - O) + (1-y)*O              #Bx1 d_f
+		d_f = (O-y)                            #Bx1 d_f
+		W_f = W_f - al*(A_h.T).dot(d_f)               
+		d_h = d_f.dot(W_f[1:,:].T)             #Bx80	
+		W_h = W_h - al*(A.T).dot(d_h)
 
-for g in xrange(n_iter):
-	A = X[g*batch_size:(g+1)*batch_size,:]
-	A = np.c_[[1]*A.shape[0], A]
-	A_h = A.dot(W_h)
-	A_h = np.c_[[1]*A.shape[0], A_h]
-	O = A_h.dot(W_f)
-	del
+##################################################################### Testing
+n_test = X_test.shape[0]
+A = np.c_[[1]*n_test,(np.c_[[1]*n_test, X_test]).dot(W_h)]
+A = A*(A>0)
+Y_test = 1.0/(1.0 + np.exp(-1.0*A.dot(W_f))).flatten()-
+output = [['id','salary']]
+output = output + [[str(test_ids[i]),str(int(j>0.5))] for i,j in enumerate(Y_test)]
+
+with open('output_NN.csv', 'w') as file:
+	for line in output:
+		file.write(",".join(line) + "\n")
